@@ -10,19 +10,34 @@ export default new Vuex.Store({
             deleteUrl : '',
             data : null,
             deletingIndex: -1,
+            isDeleted : false
 
         }
     },
 
     getters:{
         getDeleteModalObj(state){
-            return state.getDeleteModalObj
+            return state.deleteModalObj
         }
     },
 
     mutations: {
         changeTheCounter(state, data){
             state.counter += data
-        }
+        },
+        setDeleteModal(state, data){
+            const  deleteModalObj = {
+                showDeleteModal: false,
+                deleteUrl : '',
+                data : null,
+                deletingIndex: -1,
+                isDeleted : data
+
+            }
+            state.deleteModalObj = deleteModalObj
+        },
+        setDeletingModalObj(state, data){
+            state.deleteModalObj = data
+        },
     }
 })

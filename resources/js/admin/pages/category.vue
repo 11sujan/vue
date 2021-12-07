@@ -108,7 +108,7 @@
 				</Modal>
 
 				<!-- deleting confirmation -->
-				<Modal v-model="showDeleteModal" width="360">
+				<!-- <Modal v-model="showDeleteModal" width="360">
 					<p slot="header" style="color:#f60;text-align:center">
 						<Icon type="ios-information-circle"></Icon>
 						<span>Delete confirmation</span>
@@ -119,13 +119,17 @@
 					<div slot="footer">
 						<Button type="error" size="large" long :loading="isDeleting" :disabled="isDeleting" @click="deleteTag" >Delete</Button>
 					</div>
-				</Modal>
+				</Modal> -->
+                <deleteModal></deleteModal>
+
 			</div>
 		</div>
     </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+import deleteModal from "../components/deleteModal.vue"
 export default {
   data() {
     return {
@@ -234,10 +238,19 @@ export default {
       this.showDeleteModal = false;
     },
 
-    showDeletingModal(tag, i) {
-      this.deleteItem = tag;
-      this.deletingIndex = i;
-      this.showDeleteModal = true;
+    showDeletingModal(category, i) {
+        const deleteModalObj = {
+            showDeleteModal: true,
+            deleteUrl : 'app/delete_category',
+            data : category,
+            deletingIndex: i,
+            isDeleted : false
+
+        }
+            this.$store.commit('setDeletingModalObj', deleteModalObj)
+//   this.deleteItem = category;
+    //   this.deletingIndex = i;
+    //   this.showDeleteModal = true;
     },
     handleSuccess(res, file) {
 		res=`/uploads/${res}`
@@ -306,5 +319,19 @@ export default {
       this.swr();
     }
   },
+  components : {
+      deleteModal
+  },
+  computed: {
+    ...mapGetters(["getDeleteModalObj"])
+
+  },
+  watch: {
+      getDeleteModalObj(obj){
+          if(obj.isDeleted){
+              this.categories.splice(obj.deletingIndex,1)
+          }
+      }
+  }
 };
 </script>

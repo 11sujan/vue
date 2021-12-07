@@ -1,7 +1,12 @@
 <template>
   <div>
     <!-- deleting confirmation -->
-    <Modal :value="getDeleteModalObj.showDeleteModal" width="360">
+    <Modal
+      :value="getDeleteModalObj.showDeleteModal"
+      :mask-closable="false"
+      :closable="false"
+      width="360"
+    >
       <p slot="header" style="color: #f60; text-align: center">
         <Icon type="ios-information-circle"></Icon>
         <span>Delete confirmation</span>
@@ -34,20 +39,19 @@ export default {
   },
   methods: {
     async deleteTag() {
-      this.isDeleting = true;
-      const res = await this.callApi(
-        "post",
-        "app/delete_category",
-        this.deleteItem
-      );
-      if (res.status === 200) {
-        this.categories.splice(this.deletingIndex, 1);
-        this.success("Category has been deleted sucessfully!");
-      } else {
-        this.swr();
-      }
-      this.isDeleting = false;
-      this.showDeleteModal = false;
+      //   this.isDeleting = true;
+        const res = await this.callApi(
+          "post",
+          this.getDeleteModalObj.deleteUrl,this.getDeleteModalObj.data
+        );
+        if (res.status === 200) {
+          this.success("Category has been deleted sucessfully!");
+          this.$store.commit('setDeleteModal', true)
+        } else {
+            this.swr();
+          this.$store.commit('setDeleteModal', false)
+        }
+        this.isDeleting = false;
     },
   },
   computed: {
