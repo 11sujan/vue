@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Tag;
 
@@ -64,5 +65,40 @@ class AdminController extends Controller
         }
         return;
     }
-    
+
+    public function storeCategory(Request $request){
+        $this->validate($request, [
+            'categoryName'=> 'required',
+            'iconImage' => 'required'
+        ]);
+        return Category::create([
+            'categoryName' => $request->categoryName,
+            'iconImage' => $request->iconImage,
+        ]);
+    }
+
+    public function getCategory()
+    {
+        return Category::orderBy('id','desc')->get();
+    }
+
+    public function editCategory(Request $request)
+    {
+        $this->validate($request,[
+            'categoryName' => 'required',
+            'iconImage' => 'required',
+            'id'=>'required'
+        ]);
+        return Category::where('id',$request->id)->update([
+            'categoryName' => $request->categoryName,
+            'iconImage' => $request->iconImage
+        ]);
+    }
+    public function deleteCategory(Request $request)
+    {
+        $this->validate($request,[
+            'id'=>'required'
+        ]);
+        return Category::where('id',$request->id)->delete();
+    }
 }

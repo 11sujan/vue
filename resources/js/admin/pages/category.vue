@@ -18,13 +18,13 @@
 								<!-- TABLE TITLE -->
 
 								<!-- ITEMS -->
-							<tr v-for="(tag, i) in tags" :key="i" v-if="tags.length">
+							<tr v-for="(category, i) in categories" :key="i" v-if="categories.length">
 								<td>{{i+1}}</td>
-								<td class="_table_name">{{tag.tagName}}</td>
-								<td>{{tag.created_at}}</td>
+								<td class="_table_name">{{category.categoryName}}</td>
+								<td class="_table_image"><img :src="category.iconImage" alt=""/></td>
 								<td>
-									<Button type="info" size="small" @click="showEditModal(tag, i)">Edit</Button>
-									<Button type="error" size="small" @click="showDeletingModal(tag, i)" :loading="tag.isDeleting">Delete</Button>
+									<Button type="info" size="small" @click="showEditModal(category, i)">Edit</Button>
+									<Button type="error" size="small" @click="showDeletingModal(category, i)" :loading="category.isDeleting">Delete</Button>
 								</td>
 							</tr>
 								<!-- ITEMS -->
@@ -37,8 +37,9 @@
 					title="Add Category"
 					:mask-closable="false"
 					:closable="false">
-					<Input class="mb-2" v-model="data.tagName" placeholder="Enter Category Name" />
+					<Input class="mb-2" v-model="data.categoryName" placeholder="Enter Category Name" />
                      <Upload type="drag" action="app/upload"
+                        ref="uploads"
                         :headers="{'x-csrf-token' : token, 'X-Requested-With' : 'XMLHttpRequest'}"
                         :on-success="handleSuccess"
                         :on-error="handleError"
@@ -54,7 +55,7 @@
                     </Upload>
 
                     <div class="image_thumb" v-if="data.iconImage">
-						<img :src ="`/uploads/${data.iconImage}`">
+						<img :src ="`${data.iconImage}`">
 						<div class="demo-upload-list-cover">
 							<Icon type ="ios-trash-outline" @click="deleteImage"></Icon>
 						</div>
@@ -62,21 +63,47 @@
 
 					<div slot = "footer">
 					<Button type="default" @click="addModal=false">Close</Button>
-					<Button type="primary" @click="addTag" :disabled="isAdding" :loading="isAdding">{{isAdding ? 'Adding..': 'Add Tag'}}</Button>
+					<Button type="primary" @click="addCategory" :disabled="isAdding" :loading="isAdding">{{isAdding ? 'Adding..': 'Add Category'}}</Button>
 					</div>
 				</Modal>
 
 					<!-- tag editing model -->
-				<Modal
+
+                    <Modal
 					v-model="editModal"
-					title="Edit Tag"
+					title="Edit Category"
 					:mask-closable="false"
 					:closable="false">
-					<Input v-model="editData.tagName" placeholder="Edit Tag Name" />
+                    <Input class="mb-2" v-model="editData.categoryName" placeholder="Edit Category Name" />
+
+                     <Upload v-show="isIconImageNew"
+ 					 type="drag" action="app/upload"
+                        ref="editDataUploads"
+                        :headers="{'x-csrf-token' : token, 'X-Requested-With' : 'XMLHttpRequest'}"
+                        :on-success="handleSuccess"
+                        :on-error="handleError"
+                        :format="['jpg','jpeg','png']"
+                        :max-size="2048"
+                        :on-format-error="handleFormatError"
+                        :on-exceeded-size="handleMaxSize"
+                    >
+                        <div style="padding: 20px 0">
+                            <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
+                            <p>Click or drag files here to upload</p>
+                        </div>
+                    </Upload>
+
+                    <div class="image_thumb" v-if="editData.iconImage">
+						<img :src ="`${editData.iconImage}`">
+						<div class="demo-upload-list-cover">
+							<Icon type ="ios-trash-outline" @click="deleteImage(false)"></Icon>
+						</div>
+                    </div>
 
 					<div slot = "footer">
-					<Button type="default" @click="editModal=false">Close</Button>
-					<Button type="primary" @click="editTag" :disabled="isAdding" :loading="isAdding">{{isAdding ? 'Editing..': 'Edit Tag'}}</Button>
+					<Button type="default" @click="closeEditModal">Close</Button>
+                    <Button type="primary" @click="editCategory" :disabled="isAdding" :loading="isAdding">{{isAdding ? 'Editing..': 'Edit Category'}}</Button>
+
 					</div>
 				</Modal>
 
@@ -100,132 +127,184 @@
 
 <script>
 export default {
-	data(){
-		return {
-			data: {
-				iconImage: '',
-                categoryName: ''
-			},
-			addModal : false,
-			editModal : false,
-			isAdding : false,
-			tags: [],
-			editData:{
-				tagName:''
-			},
-			index : -1,
-			showDeleteModal : false,
-			isDeleting : false,
-			deleteItem : {},
-			deletingIndex: -1,
-            token: ''
-		}
-		
-	},
+  data() {
+    return {
+      data: {
+        iconImage: "",
+        categoryName: "",
+      },
+      addModal: false,
+      editModal: false,
+      isAdding: false,
+      categories: [],
+      editData: {
+        categoryName: "",
+        iconImage:''
+      },
+      index: -1,
+      showDeleteModal: false,
+      isDeleting: false,
+      deleteItem: {},
+      deletingIndex: -1,
+      token: "",
+      isIconImageNew: false,
+	  isEditingItem: false
+    };
+  },
 
-	methods: {
-		async addTag(){
-			if(this.data.tagName.trim()=='') return this.error('Tag Name is Required')
-			const res = await this.callApi('post','app/create_tag', this.data)
-			if(res.status===201){
-				this.tags.unshift(res.data)
-				this.success('Tag has been added Successfully!')
-				this.addModal=false
-				this.data.tagName=''
-			}else{
-				if(res.status==422){
-					if(res.data.errors.tagName){
-						this.error(res.data.errors.tagName[0])
-					}
-				}else{
-					this.swr()
-				}
-			}
-		},
-		async editTag(){
-			if(this.editData.tagName.trim()=='') return this.error('Tag Name is Required')
-			const res = await this.callApi('post','app/edit_tag', this.editData)
-			if(res.status===200){
-				this.tags[this.index].tagName = this.editData.tagName
-				this.success('Tag has been edited Successfully!')
-				this.editModal=false
-			}else{
-				if(res.status==422){
-					if(res.data.errors.tagName){
-						this.error(res.data.errors.tagName[0])
-					}
-				}else{
-					this.swr()
-				}
-			}
-		},
-		showEditModal(tag, index){
-			let obj = {
-				id : tag.id,
-				tagName : tag.tagName
-			}
-			this.editData = obj
-			this.editModal = true
-			this.index = index
-		},
-		async deleteTag(){
-			this.isDeleting = true
-			const res = await this.callApi('post', 'app/delete_tag', this.deleteItem)
-			if(res.status===200){
-				this.tags.splice(this.deletingIndex,1)
-				this.success('Tag has been deleted sucessfully!')
-			}else{
-				this.swr()
-			}
-			this.isDeleting = false
-			this.showDeleteModal = false
-		},
+  methods: {
+    async addCategory() {
+      if (this.data.categoryName.trim() == "")
+        return this.error("Categry Name is Required");
+      if (this.data.iconImage.trim() == "")
+        return this.error("Icone Image is Required");
+      this.data.iconImage = `${this.data.iconImage}`;
+      const res = await this.callApi("post", "app/create_category", this.data);
+      if (res.status === 201) {
+        this.categories.unshift(res.data);
+        this.success("Category has been added Successfully!");
+        this.addModal = false;
+        this.data.categoryName = "";
+        this.data.iconImage = "";
+      } else {
+        if (res.status == 422) {
+          if (res.data.errors.categoryName) {
+            this.error(res.data.errors.categoryName[0]);
+          }
+          if (res.data.errors.iconImage) {
+            this.error(res.data.errors.iconImage[0]);
+          }
+        } else {
+          this.swr();
+        }
+      }
+    },
+    async editCategory() {
+      if (this.editData.categoryName.trim() == "")
+        return this.error("Tag Name is Required");
+      if(this.editData.iconImage.trim()=='') return this.error('Icon Image is Required')
+      const res = await this.callApi(
+        "post",
+        "app/edit_category",
+        this.editData
+      );
+      if (res.status === 200) {
+        this.categories[this.index].categoryName = this.editData.categoryName;
+        this.categories[this.index].iconImage = this.editData.iconImage
+        this.success("Category has been edited Successfully!");
+        this.editModal = false;
+      } else {
+        if (res.status == 422) {
+          if (res.data.errors.categoryName) {
+            this.error(res.data.errors.categoryName[0]);
+          }
+          if (res.data.errors.iconImage) {
+            this.error(res.data.errors.iconImage[0]);
+          }
+        } else {
+          this.swr();
+        }
+      }
+    },
+    showEditModal(category, index) {
+      // let obj = {
+      // 	id : category.id,
+      // 	categoryName : category.categoryName,
+      // 	iconImage : category.iconImage
+      // }
+      this.editData = category;
+      this.editModal = true;
+      this.index = index;
+	  this.isEditingItem = true;
+    },
+    async deleteTag() {
+      this.isDeleting = true;
+      const res = await this.callApi(
+        "post",
+        "app/delete_category",
+        this.deleteItem
+      );
+      if (res.status === 200) {
+        this.categories.splice(this.deletingIndex, 1);
+        this.success("Category has been deleted sucessfully!");
+      } else {
+        this.swr();
+      }
+      this.isDeleting = false;
+      this.showDeleteModal = false;
+    },
 
-		showDeletingModal(tag, i){
-			this.deleteItem = tag
-			this.deletingIndex = i
-			this.showDeleteModal = true
-		},
-        handleSuccess (res, file) {
-               this.data.iconImage = res
-        },
-        handleError (res, file) {
-        this.$Notice.warning({
-                title: 'The file format is incorrect',
-                desc: `${file.errors.file.length ? file.errors.file[0] : 'Something went wrong!'}`
-            });
-        },
-        handleFormatError (file) {
-            this.$Notice.warning({
-                title: 'The file format is incorrect',
-                desc: 'File format of ' + file.name + ' is incorrect, please select jpg or png.'
-            });
-        },
-        handleMaxSize (file) {
-            this.$Notice.warning({ 
-                title: 'Exceeding file size limit',
-                desc: 'File  ' + file.name + ' is too large, no more than 2M.'
-            });
-        },
-		async deleteImage(){
-			console.log(this.data.iconImage)
-			let image =this.data.iconImage
-			this.data.iconImage = ''
-			const res = await this.callApi('post', 'app/delete_image',{imageName: image})
-			if(res.status!=200){
-				this.data.iconImage = image
-				this.swr()
-			}
+    showDeletingModal(tag, i) {
+      this.deleteItem = tag;
+      this.deletingIndex = i;
+      this.showDeleteModal = true;
+    },
+    handleSuccess(res, file) {
+		res=`/uploads/${res}`
+		if(this.isEditingItem){
+			return this.editData.iconImage =res
 		}
-	},
-	async created(){
-        this.token = window.Laravel.csrfToken
-		const res = await this.callApi('get','app/get_tag');
-		if(res.status==200){
-			this.tags = res.data
-		}else{
-			this.swr()
-		}
+      this.data.iconImage = res;
+    },
+    handleError(res, file) {
+      this.$Notice.warning({
+        title: "The file format is incorrect",
+        desc: `${
+          file.errors.file.length
+            ? file.errors.file[0]
+            : "Something went wrong!"
+        }`,
+      });
+    },
+    handleFormatError(file) {
+      this.$Notice.warning({
+        title: "The file format is incorrect",
+        desc:
+          "File format of " +
+          file.name +
+          " is incorrect, please select jpg or png.",
+      });
+    },
+    handleMaxSize(file) {
+      this.$Notice.warning({
+        title: "Exceeding file size limit",
+        desc: "File  " + file.name + " is too large, no more than 2M.",
+      });
+    },
+    async deleteImage(isAdd = false) {
+      if (!isAdd) { //for editing
+        this.isIconImageNew = true;
+        let image = this.editData.iconImage;
+        this.editData.iconImage = "";
+        this.$refs.editDataUploads.clearFiles();
+      } else {
+        console.log(this.data.iconImage);
+        let image = this.data.iconImage;
+        this.data.iconImage = "";
+        this.$refs.uploads.clearFiles();
+      }
+      const res = await this.callApi("post", "app/delete_image", {
+        imageName: this.image,
+      });
+      if (res.status != 200) {
+        this.data.iconImage = image;
+        this.swr();
+      }
+    },
+	closeEditModal(){
+	    this.isEditingItem = false;
+        this.editModal = false;
+
 	}
-}
+  },
+  async created() {
+    this.token = window.Laravel.csrfToken;
+    const res = await this.callApi("get", "app/get_category");
+    if (res.status == 200) {
+      this.categories = res.data;
+    } else {
+      this.swr();
+    }
+  },
+};
 </script>

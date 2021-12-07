@@ -1394,14 +1394,14 @@ li.activeclass {
 ._table_name {
     font-weight: 600;
     color: #383737;
-    max-width: 415px;
-    display: -webkit-box;
+    /* max-width: 415px; */
+    /* display: -webkit-box; */
     max-height: 3.2rem;
-    -webkit-box-orient: vertical;
+    /* -webkit-box-orient: vertical; */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;
-    -webkit-line-clamp: 2;
+    /* -webkit-line-clamp: 2; */
 }
 
 ._table_pro {
@@ -2669,8 +2669,8 @@ body.has-sticky-navbar .navbar {
 }
 
 
-/* 
-  FAQ CARDS 
+/*
+  FAQ CARDS
   */
 
 .faq-card {
@@ -3686,4 +3686,9 @@ i.cross_icon {
 
 .catagory_main_inputs {
     width: 319px;
+}
+._table_image{
+    width: 120px;
+    max-width: 415px;
+    text-align: center;
 }

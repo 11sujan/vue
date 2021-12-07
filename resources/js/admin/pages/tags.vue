@@ -22,7 +22,7 @@
 							<tr v-for="(tag, i) in tags" :key="i" v-if="tags.length">
 								<td>{{i+1}}</td>
 								<td class="_table_name">{{tag.tagName}}</td>
-								<td>{{tag.created_at}}</td>
+								<td>{{tag.created_at  | formatDate()}}</td>
 								<td>
 									<Button type="info" size="small" @click="showEditModal(tag, i)">Edit</Button>
 									<Button type="error" size="small" @click="showDeletingModal(tag, i)" :loading="tag.isDeleting">Delete</Button>
@@ -98,7 +98,7 @@ export default {
 			deleteItem : {},
 			deletingIndex: -1
 		}
-		
+
 	},
 
 	methods: {

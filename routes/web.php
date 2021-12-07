@@ -20,6 +20,12 @@ Route::post('app/delete_tag', [AdminController::class,'delete']);
 Route::post('app/upload', [AdminController::class,'upload']);
 Route::post('app/delete_image', [AdminController::class,'deleteImage']);
 
+Route::get('app/get_category', [AdminController::class,'getCategory']);
+Route::post('app/create_category', [AdminController::class,'storeCategory']);
+Route::post('app/edit_category', [AdminController::class,'editCategory']);
+Route::post('app/delete_category', [AdminController::class,'deleteCategory']);
+
+
 
 Route::get('/', function(){
     return view('welcome');
